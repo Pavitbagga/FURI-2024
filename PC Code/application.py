@@ -12,7 +12,27 @@ file = open("test.csv", "w")
 
 window_range = 5 # seconds
 samples_range = window_range * 100 # Assuming 100 Hz sample rate
+# record_data = False
 
+# all_states = [0, 1, 2, 3, 4, 5, 6] # "inactivity", "correct", "incomplete", "swinging", "very fast", "intermediate"
+# flow_of_states = [1, 2, 4, 5, 0] # "correct", "incomplete", "swinging", "very fast", "inactivity"
+# repetitions = [4, 4, 4, 4, 4]
+# button_press_samples = 50
+# current_state = 0
+# state_iterator = 0
+button_timestamps = []
+
+bluetooth_port = 'COM13'  
+baud_rate = 115200
+
+def button():
+    while True:
+        if bt_serial.in_waiting:
+            msg = bt_serial.readline().decode('utf-8').strip()
+            if msg == "Pressed":
+                button_timestamps.append(timestamps[-1])
+                print("Pressed")
+                
 def read_serial():
     ser = serial.Serial('COM11', 115200)
     time.sleep(2)
@@ -26,9 +46,20 @@ def read_serial():
                         values[i].append(unpacked_data[2+i])
             file.write("{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f}".format(*unpacked_data) + '\n')
 
-thread = threading.Thread(target=read_serial)
-thread.daemon = True 
-thread.start()
+try:
+    bt_serial = serial.Serial(bluetooth_port, baudrate=baud_rate, timeout=1)
+except Exception as e:
+    print(f"Failed to connect: {e}")
+
+button_thread = threading.Thread(target=button)
+button_thread.daemon = True
+button_thread.start()
+
+serial_thread = threading.Thread(target=read_serial)
+serial_thread.daemon = True 
+serial_thread.start()
+
+
 
 # Initialize plot
 fig, axs = plt.subplots(6, 1, sharex=True)
@@ -57,3 +88,4 @@ def update(frame):
 ani = FuncAnimation(fig, update, frames=range(1000), init_func=init, blit=False, interval=5)
 
 plt.show()
+print(button_timestamps)

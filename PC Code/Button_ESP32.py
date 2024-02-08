@@ -8,21 +8,18 @@ bluetooth_port = 'COM13'  # Replace COM_PORT with your ESP32's Bluetooth COM por
 baud_rate = 115200
 
 def connect_bluetooth():
-    print("Connecting to ESP32 via Bluetooth...")
     try:
         bt_serial = serial.Serial(bluetooth_port, baudrate=baud_rate, timeout=1)
-        print("Connected")
         return bt_serial
     except Exception as e:
         print(f"Failed to connect: {e}")
         return None
 
 def listen_for_button(bt_serial):
-    print("Listening for button press...")
     while True:
         if bt_serial.in_waiting:
             msg = bt_serial.readline().decode('utf-8').strip()
-            if msg == "Button Pressed":
+            if msg == "Pressed":
                 print("Button was pressed on ESP32")
 
 if __name__ == "__main__":
