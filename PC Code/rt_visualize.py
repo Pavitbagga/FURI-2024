@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 timestamps = []
-labels = []
 values = [[] for _ in range(6)]
 
 window_range = 5 # seconds
@@ -18,12 +17,12 @@ def read_serial():
 
     while True:
         if ser.in_waiting > 0:
-            raw_data = ser.read(32)
-            unpacked_data = struct.unpack('ffffffff', raw_data)
+            raw_data = ser.read(28)
+            unpacked_data = struct.unpack('fffffff', raw_data)
 
             timestamps.append(unpacked_data[0])
             for i in range(6):
-                        values[i].append(unpacked_data[2+i])
+                        values[i].append(unpacked_data[1+i])
 
 thread = threading.Thread(target=read_serial)
 thread.daemon = True 

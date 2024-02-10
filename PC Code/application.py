@@ -6,20 +6,13 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 timestamps = []
-labels = []
 values = [[] for _ in range(6)]
-file = open("test.csv", "w")
+file = open("data.csv", "w")
+file2 = open("timestamps.csv", "w")
 
 window_range = 5 # seconds
 samples_range = window_range * 100 # Assuming 100 Hz sample rate
-# record_data = False
 
-# all_states = [0, 1, 2, 3, 4, 5, 6] # "inactivity", "correct", "incomplete", "swinging", "very fast", "intermediate"
-# flow_of_states = [1, 2, 4, 5, 0] # "correct", "incomplete", "swinging", "very fast", "inactivity"
-# repetitions = [4, 4, 4, 4, 4]
-# button_press_samples = 50
-# current_state = 0
-# state_iterator = 0
 button_timestamps = []
 
 bluetooth_port = 'COM13'  
@@ -31,20 +24,21 @@ def button():
             msg = bt_serial.readline().decode('utf-8').strip()
             if msg == "Pressed":
                 button_timestamps.append(timestamps[-1])
-                print("Pressed")
+                file2.write(str(timestamps[-1]) + ";")
+                print(timestamps[-1])
                 
 def read_serial():
-    ser = serial.Serial('COM11', 115200)
+    ser = serial.Serial('COM11', 921600)
     time.sleep(2)
     while True:
         if ser.in_waiting > 0:
-            raw_data = ser.read(32)
-            unpacked_data = struct.unpack('ffffffff', raw_data)
+            raw_data = ser.read(28)
+            unpacked_data = struct.unpack('fffffff', raw_data)
 
             timestamps.append(unpacked_data[0])
             for i in range(6):
-                        values[i].append(unpacked_data[2+i])
-            file.write("{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f}".format(*unpacked_data) + '\n')
+                        values[i].append(unpacked_data[1+i])
+            file.write("{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f}".format(*unpacked_data) + '\n')
 
 try:
     bt_serial = serial.Serial(bluetooth_port, baudrate=baud_rate, timeout=1)
@@ -88,4 +82,6 @@ def update(frame):
 ani = FuncAnimation(fig, update, frames=range(1000), init_func=init, blit=False, interval=5)
 
 plt.show()
-print(button_timestamps)
+
+file.close()
+file2.close()

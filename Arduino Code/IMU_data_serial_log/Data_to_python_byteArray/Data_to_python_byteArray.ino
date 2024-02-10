@@ -1,11 +1,11 @@
 #include "Arduino_BMI270_BMM150.h"
 
-float data[8];
+float data[7];
 
-float label1 = 3596;
-float label2 = 2401;
-float label3 = 9892;
-float label4 = 6790;
+// float label1 = 3596;
+// float label2 = 2401;
+// float label3 = 9892;
+// float label4 = 6790;
 
 float start;
 
@@ -26,18 +26,17 @@ void setup() {
 
 void loop() {
   if (IMU.accelerationAvailable()) {
-    IMU.readAcceleration(data[3], data[2], data[4]);
+    IMU.readAcceleration(data[2], data[1], data[3]);
     acc_recv = true;
   }
 
   if (IMU.gyroscopeAvailable()) {
-    IMU.readGyroscope(data[6], data[5], data[7]);
+    IMU.readGyroscope(data[5], data[4], data[6]);
     gyro_recv = true;
   }
 
   if(acc_recv & gyro_recv){
     data[0] = (float)(millis()/1000.0) - start;
-    data[1] = label1;
     Serial.write((unsigned char *)&data, sizeof(data));
     acc_recv = false;
     gyro_recv= false;
