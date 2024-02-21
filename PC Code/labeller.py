@@ -18,7 +18,22 @@ timestamps = [float(ts) for ts in timestamps]
 # Parameters
 transient_window = 0.5 # seconds # aka start/end of rep window
 states = ["intermediate", "inactivity", "correct", "fast", "incomplete", "swinging"]
-label_order = [1, 2, 0, 2, 0, 2, 0, 2, 1, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 1]
+states = {"intermediate": 0,
+          "inactivity": 1,
+          "correct": 2,
+          "fast": 3,
+          "incomplete": 4,
+          "swinging": 5}
+
+label_order = []
+for i in range(1): 
+    label_order.append(states['inactivity'])
+for i in range(10): 
+    label_order.append(states['correct'])
+    label_order.append(states['intermediate'])
+for i in range(1): 
+    label_order.append(states['correct'])
+    label_order.append(states['inactivity'])
 
 # Extras
 boundaries = []

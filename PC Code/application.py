@@ -15,7 +15,7 @@ samples_range = window_range * 100 # Assuming 100 Hz sample rate
 
 button_timestamps = []
 
-bluetooth_port = 'COM13'  
+button_port = 'COM7'  
 baud_rate = 115200
 
 def button():
@@ -41,7 +41,7 @@ def read_serial():
             file.write("{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f}".format(*unpacked_data) + '\n')
 
 try:
-    bt_serial = serial.Serial(bluetooth_port, baudrate=baud_rate, timeout=1)
+    bt_serial = serial.Serial(button_port, baudrate=baud_rate, timeout=1)
 except Exception as e:
     print(f"Failed to connect: {e}")
 
