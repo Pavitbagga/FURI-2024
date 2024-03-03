@@ -11,10 +11,16 @@ file = open("data.csv", "w")
 
 samples_range = 5 * 100 # 5 seconds * assumed 100 Hz sample rate for visualizing only some seconds of data
 
+# Exponential Moving Average
 window_size = 10
-smoothed_values = [[0] for _ in range(6)] # Initialize with 0
+processed_values = [[0] for _ in range(6)] # Initialize with 0
 N = 10 # Num Wndows to average
 alpha = 2/(N+1)
+
+peak_window_size = 250
+peak_time_margin = 0.5
+peak_threshold = 0.3
+peaks = []
 
 value_range = [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5], [-250, 250], [-250, 250], [-250, 250]]
 
@@ -45,10 +51,38 @@ def read_serial():
             timestamps.append(unpacked_data[0])
             for i in range(6):
                 if i < 3:
-                    smoothed_values[i].append(cap(alpha*unpacked_data[1+i] + (1-alpha)*smoothed_values[i][-1], value_range[i]))
+                    processed_values[i].append(cap(alpha*unpacked_data[1+i] + (1-alpha)*processed_values[i][-1], value_range[i])) # Exponential Moving Average
                 else:
-                    smoothed_values[i].append(cap_and_scale(alpha*unpacked_data[1+i] + (1-alpha)*smoothed_values[i][-1], value_range[i]))
+                    processed_values[i].append(cap_and_scale(alpha*unpacked_data[1+i] + (1-alpha)*processed_values[i][-1], value_range[i]))
+
                 values[i].append(unpacked_data[1+i])
+
+            peak_window_times = timestamps[-1*peak_window_size:] # acc_x
+            peak_window_vals = processed_values[2][-1*peak_window_size:] # acc_x
+            peak_window_max = max(peak_window_vals)
+            peak_window_max_idx = peak_window_vals.index(peak_window_max)
+            temp_peak_time = peak_window_times[peak_window_max_idx]
+            if (temp_peak_time < peak_window_times[-1] - peak_time_margin) and (temp_peak_time > peak_window_times[0] + peak_time_margin):
+                if (peak_window_max > peak_window_vals[0] + peak_threshold) and (peak_window_max > peak_window_vals[-1] + peak_threshold):
+                    if temp_peak_time not in peaks:
+                        peaks.append(temp_peak_time)
+                        print("peak detected")
+
+
+
+
+            # current_value = processed_values[3][-1] # acc_x
+            # current_time = timestamps[-1]
+            # if current_value > peak_val + peak_threshold:
+            #     peak_val = current_value
+            #     peak_time = current_time
+            #     peak_time_index = len(timestamps) - 1
+            # if current_time > peak_time + peak_time_margin:
+            #     prev_peak_sample = processed_values[3][peak_time_index - peak_time_margin*100]
+            #     if current_value < peak_val and prev_peak_sample < peak_val:
+            #         peaks.append(peak_time)
+            #         peak_val = 0
+
             file.write("{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f}".format(*unpacked_data) + '\n')
 
 serial_thread = threading.Thread(target=read_serial)
@@ -71,7 +105,7 @@ def init():
     return lines
 
 def update(frame):
-    data_to_plot = smoothed_values
+    data_to_plot = processed_values
     if timestamps:
         for i, line in enumerate(lines):
             if len(values[i]) > 0:
