@@ -5,27 +5,26 @@ import threading
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-timestamps = []
-values = [[] for _ in range(6)]
+timestamps = [0] # Initialize with 0
+values = [[0] for _ in range(6)] # Initialize with 0
 file = open("data.csv", "w")
-file2 = open("timestamps.csv", "w")
 
-window_range = 5 # seconds
-samples_range = window_range * 100 # Assuming 100 Hz sample rate
+samples_range = 5 * 100 # 5 seconds * assumed 100 Hz sample rate for visualizing only some seconds of data
 
-button_timestamps = []
+window_size = 10
+smoothed_values = [[0] for _ in range(6)] # Initialize with 0
+N = 10 # Num Wndows to average
+alpha = 2/(N+1)
 
-button_port = 'COM7'  
-baud_rate = 115200
+range = [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5], [-250, 250], [-250, 250], [-250, 250]]
 
-def button():
-    while True:
-        if bt_serial.in_waiting:
-            msg = bt_serial.readline().decode('utf-8').strip()
-            if msg == "Pressed":
-                button_timestamps.append(timestamps[-1])
-                file2.write(str(timestamps[-1]) + ";")
-                print(timestamps[-1])
+def scale(value, range):
+    if value > range[1]:
+        return 1.5
+    elif value < range[0]:
+        return -1.5
+    else:
+        return value/range[1]
                 
 def read_serial():
     ser = serial.Serial('COM11', 921600)
@@ -37,23 +36,13 @@ def read_serial():
 
             timestamps.append(unpacked_data[0])
             for i in range(6):
-                        values[i].append(unpacked_data[1+i])
+                smoothed_values[i].append(alpha*unpacked_data[1+i] + (1-alpha)*smoothed_values[i][-1])
+                values[i].append(unpacked_data[1+i])
             file.write("{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f}".format(*unpacked_data) + '\n')
-
-try:
-    bt_serial = serial.Serial(button_port, baudrate=baud_rate, timeout=1)
-except Exception as e:
-    print(f"Failed to connect: {e}")
-
-button_thread = threading.Thread(target=button)
-button_thread.daemon = True
-button_thread.start()
 
 serial_thread = threading.Thread(target=read_serial)
 serial_thread.daemon = True 
 serial_thread.start()
-
-
 
 # Initialize plot
 fig, axs = plt.subplots(6, 1, sharex=True)
@@ -71,10 +60,11 @@ def init():
     return lines
 
 def update(frame):
+    data_to_plot = smoothed_values
     if timestamps:
         for i, line in enumerate(lines):
             if len(values[i]) > 0:
-                line.set_data(timestamps[max(0, len(timestamps)-samples_range):-1], values[i][max(0, len(timestamps)-samples_range):-1])
+                line.set_data(timestamps[max(0, len(timestamps)-samples_range):-1], data_to_plot[i][max(0, len(timestamps)-samples_range):-1])
                 axs[i].relim()
                 axs[i].autoscale_view()
     return lines
@@ -84,4 +74,3 @@ ani = FuncAnimation(fig, update, frames=range(1000), init_func=init, blit=False,
 plt.show()
 
 file.close()
-file2.close()
