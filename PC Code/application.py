@@ -8,6 +8,7 @@ from matplotlib.animation import FuncAnimation
 timestamps = [0] # Initialize with 0
 values = [[0] for _ in range(6)] # Initialize with 0
 file = open("data.csv", "w")
+file2 = open("timestamps.csv", "w")
 
 samples_range = 5 * 100 # 5 seconds * assumed 100 Hz sample rate for visualizing only some seconds of data
 
@@ -23,6 +24,8 @@ peak_threshold = 0.3
 peaks = []
 
 value_range = [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5], [-250, 250], [-250, 250], [-250, 250]]
+
+curl_counter = 0
 
 def cap_and_scale(value, value_range):
     if value > value_range[1]:
@@ -66,22 +69,9 @@ def read_serial():
                 if (peak_window_max > peak_window_vals[0] + peak_threshold) and (peak_window_max > peak_window_vals[-1] + peak_threshold):
                     if temp_peak_time not in peaks:
                         peaks.append(temp_peak_time)
-                        print("peak detected")
-
-
-
-
-            # current_value = processed_values[3][-1] # acc_x
-            # current_time = timestamps[-1]
-            # if current_value > peak_val + peak_threshold:
-            #     peak_val = current_value
-            #     peak_time = current_time
-            #     peak_time_index = len(timestamps) - 1
-            # if current_time > peak_time + peak_time_margin:
-            #     prev_peak_sample = processed_values[3][peak_time_index - peak_time_margin*100]
-            #     if current_value < peak_val and prev_peak_sample < peak_val:
-            #         peaks.append(peak_time)
-            #         peak_val = 0
+                        global curl_counter 
+                        curl_counter += 1
+                        print("Curl: " + str(curl_counter))
 
             file.write("{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f}".format(*unpacked_data) + '\n')
 
@@ -118,4 +108,8 @@ ani = FuncAnimation(fig, update, frames=range(1000), init_func=init, blit=False,
 
 plt.show()
 
+for i in peaks:
+    file2.write("{:.5f};".format(i))
+
 file.close()
+file2.close()
