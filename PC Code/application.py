@@ -16,15 +16,23 @@ smoothed_values = [[0] for _ in range(6)] # Initialize with 0
 N = 10 # Num Wndows to average
 alpha = 2/(N+1)
 
-range = [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5], [-250, 250], [-250, 250], [-250, 250]]
+value_range = [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5], [-250, 250], [-250, 250], [-250, 250]]
 
-def scale(value, range):
-    if value > range[1]:
-        return 1.5
-    elif value < range[0]:
-        return -1.5
+def cap_and_scale(value, value_range):
+    if value > value_range[1]:
+        return 1
+    elif value < value_range[0]:
+        return -1
     else:
-        return value/range[1]
+        return value/value_range[1] 
+    
+def cap(value, value_range):
+    if value > value_range[1]:
+        return value_range[1]
+    elif value < value_range[0]:
+        return value_range[0]
+    else:
+        return value
                 
 def read_serial():
     ser = serial.Serial('COM11', 921600)
@@ -36,7 +44,10 @@ def read_serial():
 
             timestamps.append(unpacked_data[0])
             for i in range(6):
-                smoothed_values[i].append(alpha*unpacked_data[1+i] + (1-alpha)*smoothed_values[i][-1])
+                if i < 3:
+                    smoothed_values[i].append(cap(alpha*unpacked_data[1+i] + (1-alpha)*smoothed_values[i][-1], value_range[i]))
+                else:
+                    smoothed_values[i].append(cap_and_scale(alpha*unpacked_data[1+i] + (1-alpha)*smoothed_values[i][-1], value_range[i]))
                 values[i].append(unpacked_data[1+i])
             file.write("{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f}".format(*unpacked_data) + '\n')
 
