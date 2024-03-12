@@ -8,7 +8,8 @@ from matplotlib.animation import FuncAnimation
 timestamps = [0] # Initialize with 0
 values = [[0] for _ in range(6)] # Initialize with 0
 file = open("data.csv", "w")
-file2 = open("timestamps2.csv", "w")
+file2 = open("start_timestamps.csv", "w")
+file3 = open("end_timestamps.csv", "w")
 
 samples_range = 5 * 100 # 5 seconds * assumed 100 Hz sample rate for visualizing only some seconds of data
 
@@ -22,11 +23,13 @@ alpha = 2/(N+1)
 peak_window_size = 250
 peak_time_margin = 0.0 
 peak_threshold = 0.3
-peaks = []
+start_times = []
+end_times = []
 
 value_range = [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5], [-250, 250], [-250, 250], [-250, 250]]
 
-curl_counter = 0
+start_found = False
+end_found = False
 
 def cap_and_scale(value, value_range):
     if value > value_range[1]:
@@ -44,7 +47,7 @@ def cap(value, value_range):
     else:
         return value
     
-def peak_detection(data, time, peak_window_size=250, peak_time_margin=0.0, peak_threshold=0.3, result="Peak"):
+def peak_detection(data, time, peaks, peak_window_size=250, peak_time_margin=0.0, peak_threshold=0.3, result="Peak"):
     peak_window_times = time[-1*peak_window_size:] # acc_y
     peak_window_vals = data[-1*peak_window_size:] # acc_y
     peak_window_max = max(peak_window_vals)
@@ -55,7 +58,15 @@ def peak_detection(data, time, peak_window_size=250, peak_time_margin=0.0, peak_
             if peak_time not in peaks:
                 peaks.append(peak_time)
                 print(result)
-                
+                return True
+    return False
+
+def segmenter(data, time, start, end, num_samples):
+    start_idx = time.index(start)
+    end_idx = time.index(end)
+    segment = data[start_idx:end_idx+1]
+    return
+
 def read_serial():
     ser = serial.Serial('COM11', 921600)
     time.sleep(2)
@@ -73,9 +84,8 @@ def read_serial():
 
                 values[i].append(unpacked_data[1+i])
 
-            peak_detection(processed_values[5], timestamps, peak_time_margin=0.5, peak_threshold=0.1, result="Start")
-            # peak_detection(processed_values[1], timestamps)
-            peak_detection(processed_values[2], timestamps, peak_time_margin=0.5, result="End")
+            start_found = peak_detection(processed_values[5], timestamps, peaks=start_times, peak_time_margin=0.5, peak_threshold=0.1, result="Start")
+            end_found = peak_detection(processed_values[2], timestamps, peaks=end_times, peak_time_margin=0.5, result="End")
 
             file.write("{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f}".format(*unpacked_data) + '\n')
 
@@ -112,8 +122,12 @@ ani = FuncAnimation(fig, update, frames=range(1000), init_func=init, blit=False,
 
 plt.show()
 
-for i in peaks:
+for i in start_times:
     file2.write("{:.5f};".format(i))
+
+for i in end_times:
+    file3.write("{:.5f};".format(i))
 
 file.close()
 file2.close()
+file3.close()
