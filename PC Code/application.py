@@ -8,18 +8,19 @@ from matplotlib.animation import FuncAnimation
 timestamps = [0] # Initialize with 0
 values = [[0] for _ in range(6)] # Initialize with 0
 file = open("data.csv", "w")
-file2 = open("timestamps.csv", "w")
+file2 = open("timestamps2.csv", "w")
 
 samples_range = 5 * 100 # 5 seconds * assumed 100 Hz sample rate for visualizing only some seconds of data
 
 # Exponential Moving Average
 window_size = 10
 processed_values = [[0] for _ in range(6)] # Initialize with 0
-N = 10 # Num Wndows to average
+N = 10 # Num Windows to average
 alpha = 2/(N+1)
 
+# Peak Detection
 peak_window_size = 250
-peak_time_margin = 0.5
+peak_time_margin = 0.0 
 peak_threshold = 0.3
 peaks = []
 
@@ -42,6 +43,18 @@ def cap(value, value_range):
         return value_range[0]
     else:
         return value
+    
+def peak_detection(data, time, peak_window_size=250, peak_time_margin=0.0, peak_threshold=0.3, result="Peak"):
+    peak_window_times = time[-1*peak_window_size:] # acc_y
+    peak_window_vals = data[-1*peak_window_size:] # acc_y
+    peak_window_max = max(peak_window_vals)
+    peak_window_max_idx = peak_window_vals.index(peak_window_max)
+    peak_time = peak_window_times[peak_window_max_idx]
+    if (peak_time < peak_window_times[-1] - peak_time_margin) and (peak_time > peak_window_times[0] + peak_time_margin): # If the peak time is between the start and end of the window
+        if (peak_window_max > peak_window_vals[0] + peak_threshold) and (peak_window_max > peak_window_vals[-1] + peak_threshold): # If the peak value is greater than first value and lower than last value
+            if peak_time not in peaks:
+                peaks.append(peak_time)
+                print(result)
                 
 def read_serial():
     ser = serial.Serial('COM11', 921600)
@@ -60,18 +73,9 @@ def read_serial():
 
                 values[i].append(unpacked_data[1+i])
 
-            peak_window_times = timestamps[-1*peak_window_size:] # acc_x
-            peak_window_vals = processed_values[2][-1*peak_window_size:] # acc_x
-            peak_window_max = max(peak_window_vals)
-            peak_window_max_idx = peak_window_vals.index(peak_window_max)
-            temp_peak_time = peak_window_times[peak_window_max_idx]
-            if (temp_peak_time < peak_window_times[-1] - peak_time_margin) and (temp_peak_time > peak_window_times[0] + peak_time_margin):
-                if (peak_window_max > peak_window_vals[0] + peak_threshold) and (peak_window_max > peak_window_vals[-1] + peak_threshold):
-                    if temp_peak_time not in peaks:
-                        peaks.append(temp_peak_time)
-                        global curl_counter 
-                        curl_counter += 1
-                        print("Curl: " + str(curl_counter))
+            peak_detection(processed_values[5], timestamps, peak_time_margin=0.5, peak_threshold=0.1, result="Start")
+            # peak_detection(processed_values[1], timestamps)
+            peak_detection(processed_values[2], timestamps, peak_time_margin=0.5, result="End")
 
             file.write("{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f}".format(*unpacked_data) + '\n')
 

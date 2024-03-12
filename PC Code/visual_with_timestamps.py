@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Load the main data file
-data = pd.read_csv('data.csv', sep=';', names=['timestamp', 'data1', 'data2', 'data3', 'data4', 'data5', 'data6'])
+data = pd.read_csv('data2.csv', sep=';', names=['timestamp', 'data1', 'data2', 'data3', 'data4', 'data5', 'data6'])
 
 # Load the timestamps file
-with open('timestamps.csv', 'r') as f:
+with open('timestamps2.csv', 'r') as f:
     button_timestamps = f.read().split(';')
     # Remove the last element if it's empty due to trailing semicolon
     if not button_timestamps[-1]:
