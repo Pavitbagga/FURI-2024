@@ -5,21 +5,14 @@ import pandas as pd
 data = pd.read_csv('data.csv', sep=';', names=['timestamp', 'data1', 'data2', 'data3', 'data4', 'data5', 'data6'])
 
 # Load the timestamps files
-with open('start_timestamps.csv', 'r') as f:
-    start_timestamps = f.read().split(';')
+with open('detection_times.csv', 'r') as f:
+    detection_times = f.read().split(';')
     # Remove the last element if it's empty due to trailing semicolon
-    if not start_timestamps[-1]:
-        start_timestamps.pop()
+    if not detection_times[-1]:
+        detection_times.pop()
 
-with open('end_timestamps.csv', 'r') as f:
-    end_timestamps = f.read().split(';')
-    # Remove the last element if it's empty due to trailing semicolon
-    if not end_timestamps[-1]:
-        end_timestamps.pop()
-
-# Convert start_timestamps to float for comparison
-start_timestamps = [float(ts) for ts in start_timestamps]
-end_timestamps = [float(ts) for ts in end_timestamps]
+# Convert detection_times to float for comparison
+detection_times = [float(ts) for ts in detection_times]
 
 # Plotting
 fig, axs = plt.subplots(6, 1, sharex=True, figsize=(10, 10))
@@ -38,11 +31,7 @@ for i in range(1, 7):
 
     # Highlight the x-axis at timestamps
     if i == 2 or i == 6:
-        for ts in start_timestamps:
-            axs[i-1].axvline(x=ts, color='g', linestyle='--')
-
-    if i == 2 or i == 3:
-        for ts in end_timestamps:
+        for ts in detection_times:
             axs[i-1].axvline(x=ts, color='r', linestyle='--')
 
 axs[-1].set_xlabel('Timestamp')

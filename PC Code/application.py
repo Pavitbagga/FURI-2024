@@ -8,8 +8,7 @@ from matplotlib.animation import FuncAnimation
 timestamps = [0] # Initialize with 0
 values = [[0] for _ in range(6)] # Initialize with 0
 file = open("data.csv", "w")
-file2 = open("start_timestamps.csv", "w")
-file3 = open("end_timestamps.csv", "w")
+file2 = open("detection_times.csv", "w")
 
 samples_range = 5 * 100 # 5 seconds * assumed 100 Hz sample rate for visualizing only some seconds of data
 
@@ -23,10 +22,10 @@ alpha = 2/(N+1)
 peak_window_size = 250
 peak_time_margin = 0.0 
 peak_threshold = 0.3
-start_times = []
-end_times = []
+curl_timeout = 3.5
+detect_times = []
 
-value_range = [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5], [-250, 250], [-250, 250], [-250, 250]]
+value_range = [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5], [-100, 100], [-100, 100], [-100, 100]]
 
 start_found = False
 end_found = False
@@ -47,21 +46,17 @@ def cap(value, value_range):
     else:
         return value
     
-def peak_detection(data, time, peaks, peak_window_size=250, peak_time_margin=0.0, peak_threshold=0.3, result="Peak"):
-    peak_window_times = time[-1*peak_window_size:] # acc_y
-    peak_window_vals = data[-1*peak_window_size:] # acc_y
-    peak_window_max = max(peak_window_vals)
-    peak_window_max_idx = peak_window_vals.index(peak_window_max)
-    peak_time = peak_window_times[peak_window_max_idx]
-    if (peak_time < peak_window_times[-1] - peak_time_margin) and (peak_time > peak_window_times[0] + peak_time_margin): # If the peak time is between the start and end of the window
-        if (peak_window_max > peak_window_vals[0] + peak_threshold) and (peak_window_max > peak_window_vals[-1] + peak_threshold): # If the peak value is greater than first value and lower than last value
-            if peak_time not in peaks:
-                peaks.append(peak_time)
-                print(result)
-                return True
-    return False
+def peak_detection(data, time, peaks, peak_window_size=250, peak_threshold=0.3, data_threshold = 0.1):
+    window_times = time[-1*peak_window_size:]
+    window_vals = data[-1*peak_window_size:]
+    peak_window_max = max(window_vals)
+    peak_window_max_idx = window_vals.index(peak_window_max)
+    peak_time = window_times[peak_window_max_idx]
+    if (peak_window_max > window_vals[0] + peak_threshold) and (peak_window_max > window_vals[-1] + peak_threshold): # If the peak value is greater than first value and lower than last value
+        if data[peak_window_max_idx] > data_threshold: # Filter for small movements
+            return peak_time
 
-def segmenter(data, time, start, end, num_samples):
+def segmenter(data, time, start, end, target_samples = 100):
     start_idx = time.index(start)
     end_idx = time.index(end)
     segment = data[start_idx:end_idx+1]
@@ -70,6 +65,7 @@ def segmenter(data, time, start, end, num_samples):
 def read_serial():
     ser = serial.Serial('COM11', 921600)
     time.sleep(2)
+    timeout_enable = False
     while True:
         if ser.in_waiting > 0:
             raw_data = ser.read(28)
@@ -84,10 +80,24 @@ def read_serial():
 
                 values[i].append(unpacked_data[1+i])
 
-            start_found = peak_detection(processed_values[5], timestamps, peaks=start_times, peak_time_margin=0.5, peak_threshold=0.1, result="Start")
-            end_found = peak_detection(processed_values[2], timestamps, peaks=end_times, peak_time_margin=0.5, result="End")
+            peak_time = peak_detection(processed_values[5], timestamps, peaks=detect_times, peak_threshold=0.02)
+            if (peak_time not in detect_times) and (peak_time != None):
+                detect_times.append(peak_time)
+                timeout_enable = True
+                print("Detection")
+            
+            # if len(detect_times) != 0:
+            #     if timestamps[-1] > detect_times[-1] + curl_timeout and timeout_enable:
+            #         detect_times.append(timestamps[-1])
+            #         timeout_enable = False
+            #         print("Detection - ")
 
-            file.write("{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f};{:.5f}".format(*unpacked_data) + '\n')
+            file.write("{:.5f};".format(timestamps[-1]))
+            for i in range(6):
+                file.write("{:.5f}".format(processed_values[i][-1]))
+                if i < 5:
+                    file.write(';')
+            file.write('\n')
 
 serial_thread = threading.Thread(target=read_serial)
 serial_thread.daemon = True 
@@ -122,12 +132,8 @@ ani = FuncAnimation(fig, update, frames=range(1000), init_func=init, blit=False,
 
 plt.show()
 
-for i in start_times:
+for i in detect_times:
     file2.write("{:.5f};".format(i))
-
-for i in end_times:
-    file3.write("{:.5f};".format(i))
 
 file.close()
 file2.close()
-file3.close()
