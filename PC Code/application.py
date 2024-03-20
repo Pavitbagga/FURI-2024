@@ -4,6 +4,10 @@ import struct
 import threading
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+import pickle
+import os
+import datetime
+from data import Data_Structure
 
 timestamps = [0] # Initialize with 0
 values = [[0] for _ in range(6)] # Initialize with 0
@@ -22,13 +26,22 @@ alpha = 2/(N+1)
 peak_window_size = 250
 peak_time_margin = 0.0 
 peak_threshold = 0.3
-curl_timeout = 3.5
+curl_timeout = 4.5
 detect_times = []
 
+# Value Ranges
 value_range = [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5], [-100, 100], [-100, 100], [-100, 100]]
 
-start_found = False
-end_found = False
+# Filesave  
+savepath = r"C:\Users\deves\Desktop\Desktop All\Class Material\Spring 2024\FURI\Data" # (CHANGE THIS)
+current_datetime = datetime.datetime.now()
+datetime_string = current_datetime.strftime('%m-%d_')
+order_of_labels = [0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2]
+entries = os.listdir(savepath)
+file_count = sum([1 for entry in entries if os.path.isfile(os.path.join(savepath, entry)) and entry.endswith('.pkl')])
+name = datetime_string + str(file_count) + '.pkl'
+filename = os.path.join(savepath, name)
+print(filename)
 
 def cap_and_scale(value, value_range):
     if value > value_range[1]:
@@ -86,11 +99,11 @@ def read_serial():
                 timeout_enable = True
                 print("Detection")
             
-            # if len(detect_times) != 0:
-            #     if timestamps[-1] > detect_times[-1] + curl_timeout and timeout_enable:
-            #         detect_times.append(timestamps[-1])
-            #         timeout_enable = False
-            #         print("Detection - ")
+            if len(detect_times) != 0:
+                if timestamps[-1] > detect_times[-1] + curl_timeout and timeout_enable:
+                    detect_times.append(timestamps[-1])
+                    timeout_enable = False
+                    print("Detection - ")
 
             file.write("{:.5f};".format(timestamps[-1]))
             for i in range(6):
@@ -137,3 +150,12 @@ for i in detect_times:
 
 file.close()
 file2.close()
+
+data = Data_Structure()
+data.timestamps = timestamps
+data.processed_values = processed_values
+data.detection_times = detect_times
+data.order_of_labels = order_of_labels
+
+with open(filename, 'wb') as file:
+    pickle.dump(data, file)
