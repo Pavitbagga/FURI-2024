@@ -3,8 +3,10 @@ import matplotlib.pyplot as plt
 class Data_Structure():
     def __init__(self) -> None:
         self.timestamps = []
+        self.raw_values = [[] for _ in range(6)]
         self.processed_values = [[] for _ in range(6)]
-        self.detection_times = []
+        self.start_times = []
+        self.timeouts = []
         self.order_of_labels = []
 
     def plot(self):
@@ -23,8 +25,10 @@ class Data_Structure():
             axs[i-1].legend(loc="upper right")
 
             # Highlight the x-axis at timestamps
-            if i == 2 or i == 6:
-                for ts in self.detection_times:
+            if i == 2 :
+                for ts in self.start_times:
+                    axs[i-1].axvline(x=ts, color='g', linestyle='--')
+                for ts in self.timeouts:
                     axs[i-1].axvline(x=ts, color='r', linestyle='--')
 
         axs[-1].set_xlabel('Timestamp')
