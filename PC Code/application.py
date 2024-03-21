@@ -22,10 +22,7 @@ N_d = 40 # Num Windows to average
 alpha_d = 2/(N_d+1)
 derivative = [0]
 
-# Peak Detection
-peak_window_size = 250
-peak_time_margin = 0.0 
-peak_threshold = 0.3
+# Curl Settings
 curl_timeout = 3.5
 start_times = []
 timeouts = []
