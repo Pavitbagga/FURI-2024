@@ -7,7 +7,7 @@ from matplotlib.animation import FuncAnimation
 import pickle
 import os
 import datetime
-from data import Data_Structure
+from data import Data_All
 
 timestamps = [0] # Initialize with 0
 raw_values = [[0] for _ in range(6)] # Initialize with 0
@@ -31,10 +31,10 @@ timeouts = []
 value_range = [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5], [-100, 100], [-100, 100], [-100, 100]]
 
 # Filesave  
-savepath = r"C:\Users\deves\Desktop\Desktop All\Class Material\Spring 2024\FURI\Data" # (CHANGE THIS)
+savepath = os.getcwd() + r"\Data" 
 current_datetime = datetime.datetime.now()
 datetime_string = current_datetime.strftime('%m-%d_')
-order_of_labels = [0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2]
+labels = [1,1,1,1,1,1,3,3,3,3,4,4,4,5,5,5] # 6 correct, 4 very fast, 3 incomplete, 3 no wrist rot
 entries = os.listdir(savepath)
 file_count = sum([1 for entry in entries if os.path.isfile(os.path.join(savepath, entry)) and entry.endswith('.pkl')])
 name = datetime_string + str(file_count) + '.pkl'
@@ -132,13 +132,13 @@ ani = FuncAnimation(fig, update, frames=range(1000), init_func=init, blit=False,
 
 plt.show()
 
-data = Data_Structure()
+data = Data_All()
 data.timestamps = timestamps
 data.raw_values = raw_values
 data.processed_values = processed_values
 data.start_times = start_times
 data.timeouts =  timeouts
-data.order_of_labels = order_of_labels
+data.labels = labels
 
 with open(filename, 'wb') as file:
     pickle.dump(data, file)
