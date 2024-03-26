@@ -7,7 +7,7 @@ from matplotlib.animation import FuncAnimation
 import pickle
 import os
 import datetime
-from data import Data_All
+from data import Data
 
 timestamps = [0] # Initialize with 0
 raw_values = [[0] for _ in range(6)] # Initialize with 0
@@ -132,7 +132,7 @@ ani = FuncAnimation(fig, update, frames=range(1000), init_func=init, blit=False,
 
 plt.show()
 
-data = Data_All()
+data = Data()
 data.timestamps = timestamps
 data.raw_values = raw_values
 data.processed_values = processed_values

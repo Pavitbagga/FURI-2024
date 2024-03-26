@@ -1,6 +1,6 @@
 import os
 import pickle
-from data import Data_All
+from data import Data
 
 data_file = r"\03-23_0.pkl"
 
@@ -31,7 +31,7 @@ for i in range(len(start_idx)):
     segment_name = data.label_dict[data.labels[i]] + str(file_count)
     start = start_idx[i]
     end = end_idx[i]+1
-    segment = Data_All()
+    segment = Data()
     segment.timestamps = data.timestamps[start:end]
     for j in range(6):
         segment.processed_values[j] = data.processed_values[j][start:end]

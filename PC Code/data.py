@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-class Data_All():
+class Data():
     def __init__(self) -> None:
         self.timestamps = []
         self.raw_values = [[] for _ in range(6)]
@@ -13,8 +13,10 @@ class Data_All():
                               3: "Very_Fast",
                               4: "Incomplete",
                               5: "No_Wrist_Rotation"  }
+        self.frequency = 100
 
     def plot(self):
+        self.equalize()
         fig, axs = plt.subplots(6, 1, sharex=True, figsize=(10, 10))
 
         labels = ['acc_x', 'acc_y', 'acc_z', 'gyro_x', 'gyro_y', 'gyro_z']
@@ -36,3 +38,8 @@ class Data_All():
 
         plt.tight_layout()
         plt.show()
+
+    def equalize(self):
+        while len(self.timestamps) != len(self.processed_values[0]):
+            for i in range(6):
+                self.processed_values[i].pop()
