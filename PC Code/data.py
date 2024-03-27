@@ -40,6 +40,7 @@ class Data():
         plt.show()
 
     def equalize(self):
-        while len(self.timestamps) != len(self.processed_values[0]):
-            for i in range(6):
+        for i in range(6):
+            if len(self.timestamps) != len(self.processed_values[i]):
                 self.processed_values[i].pop()
+            

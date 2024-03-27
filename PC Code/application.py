@@ -31,10 +31,10 @@ timeouts = []
 value_range = [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5], [-100, 100], [-100, 100], [-100, 100]]
 
 # Filesave  
-savepath = os.getcwd() + r"\Data" 
+savepath = os.getcwd() + r"\Data\Collected" 
 current_datetime = datetime.datetime.now()
 datetime_string = current_datetime.strftime('%m-%d_')
-labels = [1,1,1,1,1,1,3,3,3,3,4,4,4,5,5,5] # 6 correct, 4 very fast, 3 incomplete, 3 no wrist rot
+labels = [2 for _ in range(10)] 
 entries = os.listdir(savepath)
 file_count = sum([1 for entry in entries if os.path.isfile(os.path.join(savepath, entry)) and entry.endswith('.pkl')])
 name = datetime_string + str(file_count) + '.pkl'
@@ -63,6 +63,7 @@ def read_serial():
     time.sleep(2)
     curl_start = False
     timeout_enable = False
+    counter = 0
     while True:
         if ser.in_waiting > 0:
             raw_data = ser.read(28)
@@ -87,7 +88,8 @@ def read_serial():
                     start_times.append(timestamps[-1])
                     curl_start = True
                     timeout_enable = True
-                    print("Start")
+                    counter += 1
+                    print("Start" + str(counter))
 
             if derivative[-1] < 0:
                 curl_start = False

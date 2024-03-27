@@ -1,9 +1,10 @@
 import pickle
 import os
 
-directory = r'C:\Users\deves\Desktop\Desktop All\Class Material\Spring 2024\FURI\Data\Segments\Incomplete10.pkl'
+directory = os.getcwd() + r'\Data\Downsampled\03-26_1_10Hz_2.pkl'
 
 with open(directory, 'rb') as file:
     data = pickle.load(file)
 
+print(len(data.timestamps))
 data.plot()

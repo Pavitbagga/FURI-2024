@@ -2,20 +2,17 @@ import os
 import pickle
 from data import Data
 
-data_file = r"\03-23_0.pkl"
+data_file = "03-26_1.pkl"
 
-file_dir = os.getcwd() + r"\Data" + data_file
+file_dir = os.path.join(os.getcwd() + r"\Data\Renewed" , data_file)
 
 with open(file_dir, 'rb') as file:
     data = pickle.load(file)
 
+data.equalize()
+
 start_idx = []
 end_idx = []
-
-savepath = os.getcwd() + r"\Data\Segments"
-entries = os.listdir(savepath)
-file_count = sum([1 for entry in entries if os.path.isfile(os.path.join(savepath, entry)) and entry.endswith('.pkl')])
-segment_number = file_count
 
 for i, time in enumerate(data.timestamps):
     if time in data.timeouts:
@@ -27,8 +24,17 @@ for i, time in enumerate(data.timestamps):
         else:
             start_idx.append(i)
 
+if len(end_idx) < len(start_idx):
+    end_idx.append(data.timestamps[-1])
+
 for i in range(len(start_idx)):
-    segment_name = data.label_dict[data.labels[i]] + str(file_count)
+    label_str = data.label_dict[data.labels[i]]
+    savepath = os.getcwd() + r"\Data\Segments\\" + label_str
+    entries = os.listdir(savepath)
+    file_count = sum([1 for entry in entries if os.path.isfile(os.path.join(savepath, entry)) and entry.endswith('.pkl')])
+    segment_number = file_count
+
+    segment_name = label_str + str(file_count)
     start = start_idx[i]
     end = end_idx[i]+1
     segment = Data()
