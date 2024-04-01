@@ -2,9 +2,9 @@ import os
 import pickle
 from data import Data
 
-data_file = "03-26_1.pkl"
+data_file = "03-26_3.pkl"
 
-file_dir = os.path.join(os.getcwd() + r"\Data\Renewed" , data_file)
+file_dir = os.path.join(os.getcwd() + r"\Data\Collected" , data_file)
 
 with open(file_dir, 'rb') as file:
     data = pickle.load(file)

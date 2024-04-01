@@ -8,6 +8,7 @@ class Data():
         self.start_times = []
         self.timeouts = []
         self.labels = []
+        self.descr = ""
         self.label_dict = {   1: "Correct",
                               2: "Swinging",
                               3: "Very_Fast",
@@ -43,4 +44,5 @@ class Data():
         for i in range(6):
             if len(self.timestamps) != len(self.processed_values[i]):
                 self.processed_values[i].pop()
-            
+    
+    
